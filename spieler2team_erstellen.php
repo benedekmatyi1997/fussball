@@ -4,7 +4,7 @@ require_once("smarty.inc.php");
 $s2t=new Spieler2Team();
 $smarty=new Smarty();
 print_r($_POST);
-$s2t->setValues(filter_input(INPUT_POST, "id"), filter_input(INPUT_POST, "spieler"),filter_input(INPUT_POST, "team"),filter_input(INPUT_POST, "von"),filter_input(INPUT_POST, "bis"));
+$s2t->setValues(filter_input(INPUT_POST, "id"), filter_input(INPUT_POST, "team"),filter_input(INPUT_POST, "spieler"),filter_input(INPUT_POST, "von"),filter_input(INPUT_POST, "bis"));
 try
 {
     $s2t->update();

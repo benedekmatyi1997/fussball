@@ -1,14 +1,14 @@
 <?php
 require_once("class.db.php");
-require_once("class.spielereignis.php");
+require_once("class.spieler.php");
 require_once("class.match.php");
 require_once("class.AbstractBaseClass.php");
 
 class Spielereignis extends AbstractBaseClass
 {
-	protected static $columns=array("id","spielereignis","minute","nachspielzeit","typ","match");
+	protected static $columns=array("id","spielerid","minute","nachspielzeit","typ","match");
     private $id;
-	private $spielereignis;
+	private $spieler;
 	private $minute;
     private $nachspielzeit;
 	private $typ;
@@ -29,15 +29,15 @@ class Spielereignis extends AbstractBaseClass
         {
             static::$db=DB::getDB();
         }
-		$stmt=static::$db->prepare("SELECT * FROM spielereigniseignis WHERE id=:id");
-            $stmt->bindValue(":id",$id);
-            $error="";
-            if($stmt->execute())
-            {
+		$stmt=static::$db->prepare("SELECT * FROM spielereignis WHERE id=:id");
+        $stmt->bindValue(":id",$id);
+        $error="";
+        if($stmt->execute())
+        {
             $joincolumns=array();
             $joinarray=array();
-            array_merge($joincolumns, Spielereignis::getColumns("spielereigniseignis"));
-            array_merge($joincolumns, Spieler::getColumns("spielereignis"));
+            array_merge($joincolumns, Spielereignis::getColumns("spielereignis"));
+            array_merge($joincolumns, Spieler::getColumns("spieler"));
             array_merge($joincolumns, Match::getColumns("spiel"));
             for($i=1;$i<=count($joincolumns);$i++)
             {
@@ -47,8 +47,8 @@ class Spielereignis extends AbstractBaseClass
             $result=$stmt->fetch(PDO::FETCH_BOUND);
                 if($result)
                 {
-                    $this->stadion=new Spieler();
-                    $this->stadion->setValues($joinarray["spielereignisid"],$joinarray["spielereignisvorname"],$joinarray["spielereignisnachname"],$joinarray["spielereignisgeburtsdatum"]);
+                    $this->spieler=new Spieler();
+                    $this->spieler->setValues($joinarray["spielerid"],$joinarray["spielervorname"],$joinarray["spielernachname"],$joinarray["spielergeburtsdatum"]);
                     $this->match=new Match();
                     $this->match->setValues($joinarray["spielid"], $joinarray["spielteam1"], $joinarray["spielteam2"], $joinarray["spielzeitpunkt"], $joinarray["spielhalbzeit1"], $joinarray["spielhalbzeit2"],$joinarray["spielstadion"],$joinarray["spielzuschauzahl"]);
                     $this->von=$joinarray["typ"];
@@ -63,32 +63,38 @@ class Spielereignis extends AbstractBaseClass
             {
                 throw new Exception($error);
             }
-	}
+        }
         public function update()
         {
-             $insert="INSERT INTO spielereignisereignis (id,spielereignis,minute,typ,match) VALUES (:id,:team,:stadion,:von,:bis)";
-		if($this->id != 0)
-		{
-			$stmt=static::$db->prepare("$insert
-						ON DUPLICATE KEY
-						UPDATE spielereignis=:spielereignis,minute=:minute,typ=:typ,match=:match");	
-		}
-		else
-		{
-			$stmt=static::$db->prepare($insert);
-			
-		}
-                
-        $stmt->bindValue(":id",$this->id);
-		$stmt->bindValue(":spielereignis",$this->spielereignis->getId());
-		$stmt->bindValue(":match",$this->match->getId());
-        $stmt->bindValue(":minute",$this->minute);
-		$stmt->bindValue(":typ",$this->typ);
-        
-        if(!$stmt->execute())
-		{
-			throw new Exception($stmt->errorInfo()[2]);
-		}
+            if(static::$db==null)
+            {
+                static::$db=DB::getDB();
+            }
+
+            $insert="INSERT INTO spielereignis (id,spielerid,minute,nachspielzeit,typ,matchid) ".
+                    "VALUES (:id,:spielerid,:minute,:nachspielzeit,:typ,:matchid)";
+            if($this->id != 0)
+            {
+                $stmt=static::$db->prepare("$insert
+                            ON DUPLICATE KEY
+                            UPDATE spielerid=:spielerid,minute=:minute,nachspielzeit=:nachspielzeit,typ=:typ,matchid=:matchid");	
+            }
+            else
+            {
+                $stmt=static::$db->prepare($insert);
+            }
+
+            $stmt->bindValue(":id",$this->id);
+            $stmt->bindValue(":spielerid",$this->getSpieler()->getId());
+            $stmt->bindValue(":matchid",$this->getMatch()->getId());
+            $stmt->bindValue(":minute",$this->minute);
+            $stmt->bindValue(":nachspielzeit",$this->nachspielzeit);
+            $stmt->bindValue(":typ",$this->typ);
+
+            if(!$stmt->execute())
+            {
+                throw new Exception($stmt->errorInfo()[2]);
+            }
         }
         public function getId()
 	{
@@ -96,7 +102,7 @@ class Spielereignis extends AbstractBaseClass
 	}
         public function getSpieler()
 	{
-		return $this->spielereignis;
+		return $this->spieler;
 	}
 	 public function getMatch()
 	{
@@ -122,27 +128,34 @@ class Spielereignis extends AbstractBaseClass
 	{
 		$this->match=$match;        
         }
-        public function setSpieler($spielereignis)
+        public function setSpieler($spieler)
 	{
-		$this->spielereignis=$spielereignis;        
+		$this->spieler=$spieler;        
         }
         public function setMinute($minute)
 	{
 		$this->minute=$minute;        
         }
-         public function setNachspielzeit($nachspielzeit)
+    public function setNachspielzeit($nachspielzeit)
 	{
-		$this->nachspielzeit=$nachspielzeit;        
+        if(in_array($nachspielzeit, array(45,90,105,120)))
+        {
+            $this->nachspielzeit=$nachspielzeit;        
         }
+        else
+        {
+            $this->nachspielzeit=0;
+        }
+    }
         public function setTyp($typ)
 	{
 		$this->typ=$typ;        
         }
-	public function setValues($id,$match,$spielereignis,$minute,$nachspielzeit,$typ)
+	public function setValues($id,$match,$spieler,$minute,$nachspielzeit,$typ)
     {
         $this->setId($id);
         $this->setMatch($match);
-        $this->setSpieler($spielereignis);
+        $this->setSpieler($spieler);
         $this->setMinute($minute);
         $this->setNachspielzeit($nachspielzeit);
         $this->setTyp($typ);
@@ -155,7 +168,7 @@ class Spielereignis extends AbstractBaseClass
         }
         if(static::$return_array==null)
         {
-            $stmt=static::$db->prepare("SELECT m.*,sp.*,se.* FROM spielereigniseignis se LEFT JOIN match m ON m.id=se.matchid LEFT JOIN spielereignis sp ON sp.id=se.spielereignisid");
+            $stmt=static::$db->prepare("SELECT m.*,sp.*,se.* FROM spielereignis se LEFT JOIN match m ON m.id=se.matchid LEFT JOIN spieler sp ON sp.id=se.spielerid");
             $error="";
             static::$return_array=array();
             if($stmt->execute())
@@ -166,8 +179,7 @@ class Spielereignis extends AbstractBaseClass
                 $joincolumns=array_merge($joincolumns, Spieler::getColumns("spieler"));
                 $joincolumns=array_merge($joincolumns, Spielereignis::getColumns("spielereignis"));
    
-                print_r($joincolumns);
-                print_r(static::getColumns("spielereignis"));
+                
                 for($i=1;$i<=count($joincolumns);$i++)
                 {
                     $stmt->bindColumn($i,$joinarray[$joincolumns[$i-1]]);
@@ -188,6 +200,46 @@ class Spielereignis extends AbstractBaseClass
             }
         }
         return static::$return_array;
+    }
+    public static function getSpielereignisseForMatch($matchid) 
+    {
+        if(static::$db==null)
+        {
+            static::$db=DB::getDB();
+        }
+        $stmt=static::$db->prepare("SELECT s.*, se.* FROM spielereignis se ".
+                                   "LEFT JOIN spieler s ON se.spielerid=s.id ".
+                                   "WHERE se.matchid=:matchid");
+        
+        $stmt->bindValue(":matchid",$matchid);
+        if($stmt->execute())
+        {
+            $spielereignis=array();
+            $joincolumns=array();
+            $joinarray=array();
+            $joincolumns=array_merge($joincolumns,Spieler::getColumns("spieler"));
+            $joincolumns=array_merge($joincolumns,Spielereignis::getColumns("spielereignis"));
+            for($i=1;$i<count($joincolumns);$i++)
+            {
+                $stmt->bindColumn($i,$joinarray[$joincolumns[$i-1]]);
+            }
+            
+            while($result=$stmt->fetch(PDO::FETCH_BOUND))
+            {
+                print(count($joincolumns)." ".count($joinarray));
+                print_r($joinarray);
+                $spieler_temp=new Spieler();
+                $spieler_temp->setValues($joinarray["spielerid"], $joinarray["spielervorname"], $joinarray["spielernachname"], $joinarray["spielergeburtsdatum"]);
+                $spielereignis_temp=new Spielereignis();
+                $spielereignis_temp->setValues($joinarray["spielereignisid"], $joinarray["spielereignismatch"], $spieler_temp, $joinarray["spielereignisminute"], $joinarray["spielereignisnachspielzeit"], $joinarray["spielereignistyp"]);
+                array_push($spielereignis,$spielereignis_temp);
+            }
+            return $spielereignis;
+        }
+        else 
+        {
+            throw new Exception($stmt->errorInfo()[2]);
+        }
     }
 
 }

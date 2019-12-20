@@ -15,14 +15,10 @@ foreach ($spieler2team_array as $spieler2team)
     {
         $spieler2team_daten["disabled"]=1;
         $team_id=$spieler2team["team"]->getId();
-        $spieler2team_daten["name"]=$spieler2team["team"]->getName();
+        $spieler2team_daten["team_name"]=$spieler2team["team"]->getName();
     }
-    else 
-    {
-        $spieler2team_daten["disabled"]=0;
-        $spieler2team_daten["id"]=$spieler2team["spieler"]->getId();
-        $spieler2team_daten["name"]=$spieler2team["spieler"]->getName();
-    }
+    $spieler2team_daten["id"]=$spieler2team["spieler"]->getId();
+    $spieler2team_daten["name"]=$spieler2team["spieler"]->getName();
     array_push($spieler2team_smarty,$spieler2team_daten);
 }
 

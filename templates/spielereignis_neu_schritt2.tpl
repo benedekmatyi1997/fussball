@@ -6,7 +6,8 @@
     <td><select name="spieler">       
 
         {foreach $spieler_daten as $s_daten}
-                <option {if $s_daten["disabled"] eq 1}disabled{else}value="{$s_daten["id"]}"{/if}>{$s_daten["name"]}</option>
+                {if $s_daten["disabled"] eq 1}<option disabled>{$s_daten["team_name"]}</option>{/if}
+                <option value="{$s_daten["id"]}">{$s_daten["name"]}</option>
         {/foreach}
         </select>
     </td>
@@ -36,7 +37,7 @@
 <tr>
     <td>Nachspielzeit:</td>
     <td><select name="nachspielzeit">
-        {for $nachspielzeit=1 to 10}
+        {for $nachspielzeit=0 to 10}
             <option value="{$nachspielzeit}">{$nachspielzeit}</option>
         {/for}
         </select>

@@ -93,12 +93,14 @@ class Match extends AbstractBaseClass
             $result=$stmt->fetch(PDO::FETCH_BOUND);
             if($result)
             {
+                
                 $this->stadion=new Stadion();
                 $this->stadion->setValues($joinarray["stadionid"],$joinarray["stadionname"],$joinarray["stadionort"],$joinarray["stadionkapazitaet"]);
                 $this->team1=new Team();
                 $this->team1->setValues($joinarray["team1id"], $joinarray["team1name"]);
                 $this->team2=new Team();
-                $this->team1->setValues($joinarray["team2id"], $joinarray["team2name"]);
+                $this->team2->setValues($joinarray["team2id"], $joinarray["team2name"]);
+                $this->id=$joinarray["spielid"];
                 $this->zeitpunkt=$joinarray["spielzeitpunkt"];
                 $this->halbzeit1=$joinarray["spielhalbzeit1"];
                 $this->halbzeit2=$joinarray["spielhalbzeit2"];

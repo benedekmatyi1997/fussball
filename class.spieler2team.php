@@ -105,11 +105,11 @@ class Spieler2Team extends AbstractBaseClass
 	{
 		return $this->id;
 	}
-        public function getSpieler()
+        public function getSpieler():Spieler
 	{
 		return $this->spieler;
 	}
-	 public function getTeam()
+	 public function getTeam():Team
 	{
 		return $this->team;
 	}
@@ -195,29 +195,34 @@ class Spieler2Team extends AbstractBaseClass
         {
             static::$db=DB::getDB();
         }
+        print("$team1 $team2 $date");
         $return_array=array();
-        $stmt=static::$db->prepare("SELECT s2t.*,t.*,sp.* FROM spieler2team s2t ".
+        $stmt=static::$db->prepare("(SELECT s2t.*,t.*,sp.* FROM spieler2team s2t ".
                                    "LEFT JOIN team t ON s2t.teamid=t.id ". 
-                                   "LEFT JOIN spieler sp ON s2t.spieler=sp.id ".
-                                   "WHERE s2t.von <= :date AND s2t.bis >=:date AND (s2t.teamid=:team1 OR s2t.teamid=:team2) ORDER BY s2t.teamid");
+                                   "LEFT JOIN spieler sp ON s2t.spielerid=sp.id ".
+                                   "WHERE s2t.von <= :date AND s2t.bis >=:date AND s2t.teamid=:team1) UNION ".
+                                   "(SELECT s2t.*,t.*,sp.* FROM spieler2team s2t ".
+                                   "LEFT JOIN team t ON s2t.teamid=t.id ". 
+                                   "LEFT JOIN spieler sp ON s2t.spielerid=sp.id ".
+                                   "WHERE s2t.von <= :date AND s2t.bis >=:date AND s2t.teamid=:team2)");
         $stmt->bindValue(":team1",$team1);
         $stmt->bindValue(":team2",$team2);
         $stmt->bindValue(":date",$date);
-        
         if($stmt->execute())
         {
             
             $joincolumns= array();
             $joinarray= array();
-            array_merge($joincolumns, Spieler2Team::getColumns("spieler2team"));
-            array_merge($joincolumns, Team::getColumns("team"));
-            array_merge($joincolumns, Spieler::getColumns("spieler"));
+            $joincolumns=array_merge($joincolumns, Spieler2Team::getColumns("spieler2team"));
+            $joincolumns=array_merge($joincolumns, Team::getColumns("team"));
+            $joincolumns=array_merge($joincolumns, Spieler::getColumns("spieler"));
             for($i=1;$i<=count($joincolumns);$i++)
             {
                 $stmt->bindColumn($i,$joinarray[$joincolumns[$i-1]]);
             }
             while($result=$stmt->fetch(PDO::FETCH_BOUND))
             {
+                $temp_element=array();
                 $temp_element["spieler"]=new Spieler();
                 $temp_element["team"]=new Team();
                 $temp_element["spieler"]->setValues($joinarray["spielerid"], $joinarray["spielervorname"], 
@@ -225,6 +230,10 @@ class Spieler2Team extends AbstractBaseClass
                 $temp_element["team"]->setValues($joinarray["teamid"], $joinarray["teamname"]);
                 array_push($return_array,$temp_element);
             }
+        }
+        else 
+        {
+            throw new Exception($stmt->errorInfo()[2]);
         }
         return $return_array;
     }
