@@ -1,4 +1,6 @@
 /templates_c/
 /db_config.inc.php
 /test*
-/nbproject/private/
+/nbproject/*
+SELECT_foreach.txt
+_teststuff.php
