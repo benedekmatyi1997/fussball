@@ -16,10 +16,11 @@ class Match extends AbstractBaseClass
     private $halbzeit2;
     private $stadion;
     private $zuschauzahl;   //TODO: ändern auf zuschauERzahl
+    private $endstand1;
+    private $endstand2;
     private static $db;
     private static $return_array;
-
-
+    
     public function __construct($id=0)
     {
         $this->id=$id;
@@ -154,6 +155,16 @@ class Match extends AbstractBaseClass
     {
             return $this->zuschauzahl;
     }
+    public function getEndstand1() 
+    {
+        return $this->endstand1;
+    }
+
+    public function getEndstand2() 
+    {
+        return $this->endstand2;
+    }
+
     public function setId($id)
     {
             $this->id=$id;        
@@ -186,6 +197,17 @@ class Match extends AbstractBaseClass
     {
             $this->zuschauzahl=$zuschauzahl;        
     }
+
+    public function setEndstand1($endstand1) 
+    {
+        $this->endstand1 = $endstand1;
+    }
+
+    public function setEndstand2($endstand2) 
+    {
+        $this->endstand2 = $endstand2;
+    }
+
     public function setValues($id,$team1,$team2,$zeitpunkt,$halbzeit1,$halbzeit2,$stadion,$zuschauzahl)
     {
         if(static::$db==null)
@@ -287,7 +309,7 @@ class Match extends AbstractBaseClass
             }
         }
         return static::$return_array;
-    }    
+    }        
     public function getDescription()
     {
         return "".$this->id." - ".$this->zeitpunkt." - ".$this->team1->getName()." - ".$this->team2->getName()." - ".$this->stadion->getName();
