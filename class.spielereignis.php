@@ -219,15 +219,13 @@ class Spielereignis extends AbstractBaseClass
             $joinarray=array();
             $joincolumns=array_merge($joincolumns,Spieler::getColumns("spieler"));
             $joincolumns=array_merge($joincolumns,Spielereignis::getColumns("spielereignis"));
-            for($i=1;$i<count($joincolumns);$i++)
+            for($i=1;$i<=count($joincolumns);$i++)
             {
                 $stmt->bindColumn($i,$joinarray[$joincolumns[$i-1]]);
             }
             
             while($result=$stmt->fetch(PDO::FETCH_BOUND))
             {
-                print(count($joincolumns)." ".count($joinarray));
-                print_r($joinarray);
                 $spieler_temp=new Spieler();
                 $spieler_temp->setValues($joinarray["spielerid"], $joinarray["spielervorname"], $joinarray["spielernachname"], $joinarray["spielergeburtsdatum"]);
                 $spielereignis_temp=new Spielereignis();
