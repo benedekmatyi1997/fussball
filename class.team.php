@@ -4,89 +4,81 @@ require_once("class.AbstractBaseClass.php");
 class Team extends AbstractBaseClass
 {
     protected static $columns=array("id","name");
-    protected static $return_array;
-	private $id;
-	private $name;
-	private static $db;
+    private $id;
+    private $name;
 
-	public function __construct($id=0)
-	{
-		
-		$this->id=$id;
-		if($id!=0)
-		{
-			$this->load($id);
-		}
-	}
-	public function load($id)
-	{
-        if(static::$db==null)
+    public function __construct($id=0)
+    {
+        
+        $this->id=$id;
+        if($id!=0)
         {
-            static::$db=DB::getDB();
+            $this->load($id);
         }
-		$stmt=static::$db->prepare("SELECT * FROM team WHERE id=:id");
-		$stmt->bindValue(":id",$id);
-		$error="";
-		if($stmt->execute())
-		{
-			$result=$stmt->fetch();
-			if($result)
-			{
-				$this->name=$result["name"];
-			}
-			else
-			{
-				$error.="Leeres Resultat";
-			}
-		}
-		else
-		{
-			$error.=$stmt->errorInfo()[2];
-		}
-		if(strlen($error))
-		{
-			throw new Exception($error);
-		}
-	}
-	public function update()
-	{
-        if(static::$db==null)
+    }
+    public function load($id)
+    {
+        static::initDB();
+        $stmt=static::$db->prepare("SELECT * FROM team WHERE id=:id");
+        $stmt->bindValue(":id",$id);
+        $error="";
+        if($stmt->execute())
         {
-            static::$db=DB::getDB();
+            $result=$stmt->fetch();
+            if($result)
+            {
+                $this->name=$result["name"];
+            }
+            else
+            {
+                $error.="Leeres Resultat";
+            }
         }
-		$insert="INSERT INTO team (id,name) VALUES (:id,:name)";
-		if($this->id != 0)
-		{
-			$stmt=static::$db->prepare("$insert 
-									  ON DUPLICATE KEY 
-									  UPDATE team SET name=:name WHERE id=:id");
-			
-		}
-		else
-		{
-			$stmt=static::$db->prepare($insert);
-			
-		}
+        else
+        {
+            $error.=$stmt->errorInfo()[2];
+        }
+        if(strlen($error))
+        {
+            throw new Exception($error);
+        }
+    }
+    public function update()
+    {
+        static::initDB();
+        $insert="INSERT INTO team (id,name) VALUES (:id,:name)";
+        if($this->id != 0)
+        {
+            $stmt=static::$db->prepare("$insert 
+                                      ON DUPLICATE KEY 
+                                      UPDATE team SET name=:name WHERE id=:id");
+            
+        }
+        else
+        {
+            $stmt=static::$db->prepare($insert);
+            
+        }
                 $stmt->bindValue(":id",$this->id);
-		$stmt->bindValue(":name",$this->name);
-		if(!$stmt->execute())
-		{
-			throw new Exception($stmt->errorInfo()[2]);
-		}		
-	}
-	public function get_as_array()
-	{
-		return array("Id" => $this->getId(),
-					 "name" => $this->getName());
-	}
-	public function getId()
-	{
-		return $this->id;
-	}
-	public function getName()
-	{
-		return $this->name;
-	}
+        $stmt->bindValue(":name",$this->name);
+        if(!$stmt->execute())
+        {
+            throw new Exception($stmt->errorInfo()[2]);
+        }        
+    }
+    public function get_as_array()
+    {
+        return array("Id" => $this->getId(),
+                     "name" => $this->getName());
+    }
+    public function getId()
+    {
+        return $this->id;
+    }
+    public function getName()
+    {
+        return $this->name;
+    }
     public function setId($id)
     {
         $this->id=$id;
@@ -102,37 +94,26 @@ class Team extends AbstractBaseClass
     }
     public static function getAll()
     {
-        if(static::$db==null)
+        static::initDB();
+        if(static::$all_elements==null)
         {
-            static::$db=DB::getDB();
-        }
-        if(static::$return_array==null)
-        {
-            static::$return_array=array();
+            static::$all_elements=array();
             $stmt=static::$db->prepare("SELECT * FROM team");
             $error="";
-            $return_array=array();
+
             if($stmt->execute())
             {
-                    $joincolumns=array();
-                    $joinarray=array();
-
-                    $joincolumns=array_merge($joincolumns, Team::getColumns("team"));
-
-                    for($i=1;$i<=count($joincolumns);$i++)
-                    {
-                        $stmt->bindColumn($i,$joinarray[$joincolumns[$i-1]]);
-                    }
+                    $joinarray=static::getJoinArray($stmt,Team::getColumns("team"));
 
                     while ($result=$stmt->fetch(PDO::FETCH_BOUND))
                     {
                         $team_temp=new Team();
                         $team_temp->setValues($joinarray["teamid"], $joinarray["teamname"]);
-                        array_push(static::$return_array,$team_temp);
+                        array_push(static::$all_elements,$team_temp);
                     }
 
             }
         }
-        return static::$return_array;
+        return static::$all_elements;
     }
 }

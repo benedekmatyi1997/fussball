@@ -18,12 +18,13 @@ class Match extends AbstractBaseClass
     private $zuschauzahl;   //TODO: ändern auf zuschauERzahl
     private $endstand1;
     private $endstand2;
-    private static $db;
-    private static $return_array;
     
     public function __construct($id=0)
     {
         $this->id=$id;
+        $this->setTeam1(0);
+        $this->setTeam2(0);
+        $this->setStadion(0);
         if($id!=0)
         {
             $this->load($id);
@@ -31,45 +32,39 @@ class Match extends AbstractBaseClass
     }
     public function update()
     {
-        if(static::$db==null)
-        {
-            static::$db=DB::getDB();
-        }
+        static::initDB();
         $insert="INSERT INTO spiel (id,team1,team2,zeitpunkt,halbzeit1,halbzeit2,stadion,zuschauzahl) VALUES (:id,:team1,:team2,:zeitpunkt,:halbzeit1,:halbzeit2,:stadion,:zuschauzahl)";
-		if($this->id != 0)
-		{
-			$stmt=static::$db->prepare("$insert
-						ON DUPLICATE KEY
-						UPDATE team1=:team1,team2=:team2,zeitpunkt=:zeitpunkt,".
+        if($this->id != 0)
+        {
+            $stmt=static::$db->prepare("$insert
+                        ON DUPLICATE KEY
+                        UPDATE team1=:team1,team2=:team2,zeitpunkt=:zeitpunkt,".
                         "halbzeit1=:halbzeit1,halbzeit2=:halbzeit2,stadion=:stadion,zuschauzahl=:zuschauzahl");
-			
-		}
-		else
-		{
-			$stmt=static::$db->prepare($insert);
-			
-		}
+            
+        }
+        else
+        {
+            $stmt=static::$db->prepare($insert);
+            
+        }
                 
         $stmt->bindValue(":id",$this->id);
-		$stmt->bindValue(":team1",$this->team1->getId());
-		$stmt->bindValue(":team2",$this->team2->getId());
+        $stmt->bindValue(":team1",$this->team1->getId());
+        $stmt->bindValue(":team2",$this->team2->getId());
         $stmt->bindValue(":zeitpunkt",$this->zeitpunkt);
-		$stmt->bindValue(":halbzeit1",$this->halbzeit1);
+        $stmt->bindValue(":halbzeit1",$this->halbzeit1);
         $stmt->bindValue(":halbzeit2",$this->halbzeit2);
         $stmt->bindValue(":stadion",$this->stadion->getId());
         $stmt->bindValue(":zuschauzahl",$this->zuschauzahl);
         
         if(!$stmt->execute())
-		{
-			throw new Exception($stmt->errorInfo()[2]);
-		}
+        {
+            throw new Exception($stmt->errorInfo()[2]);
+        }
     }
     public function load($id)
     {
-        if(static::$db==null)
-        {
-            static::$db=DB::getDB();
-        }
+        static::initDB();
         $stmt=static::$db->prepare("SELECT s.*,t1.*,t2.*,st.* FROM spiel s "
                 . "LEFT JOIN team t1 ON t1.id=s.team1id "
                 . "LEFT JOIN team t2 ON t2.id=s.team2id "
@@ -80,26 +75,14 @@ class Match extends AbstractBaseClass
         $error="";
         if($stmt->execute())
         {
-            $joincolumns=array();
-            $joinarray=array();
-            $joincolumns=array_merge($joincolumns, Match::getColumns("spiel"));
-            $joincolumns=array_merge($joincolumns,Team::getColumns("team1"));
-            $joincolumns=array_merge($joincolumns,Team::getColumns("team2"));
-            $joincolumns=array_merge($joincolumns,Stadion::getColumns("stadion"));
-            for($i=1;$i<=count($joincolumns);$i++)
-            {
-                $stmt->bindColumn($i,$joinarray[$joincolumns[$i-1]]);
-            }
+            $joinarray=static::getJoinArray($stmt,array_merge(Match::getColumns("spiel"),Team::getColumns("team1"),
+                                                              Team::getColumns("team2"),Stadion::getColumns("stadion")));
             
             $result=$stmt->fetch(PDO::FETCH_BOUND);
             if($result)
-            {
-                
-                $this->stadion=new Stadion();
+            {                
                 $this->stadion->setValues($joinarray["stadionid"],$joinarray["stadionname"],$joinarray["stadionort"],$joinarray["stadionkapazitaet"]);
-                $this->team1=new Team();
                 $this->team1->setValues($joinarray["team1id"], $joinarray["team1name"]);
-                $this->team2=new Team();
                 $this->team2->setValues($joinarray["team2id"], $joinarray["team2name"]);
                 $this->id=$joinarray["spielid"];
                 $this->zeitpunkt=$joinarray["spielzeitpunkt"];
@@ -127,11 +110,11 @@ class Match extends AbstractBaseClass
     {
             return $this->id;
     }
-    public function getTeam1()
+    public function getTeam1():Team
     {
             return $this->team1;
     }
-     public function getTeam2()
+     public function getTeam2():Team
     {
             return $this->team2;
     }
@@ -147,7 +130,7 @@ class Match extends AbstractBaseClass
     {
             return $this->halbzeit2;
     }
-    public function getStadion()
+    public function getStadion():Stadion
     {
             return $this->stadion;
     }
@@ -171,11 +154,33 @@ class Match extends AbstractBaseClass
     }
     public function setTeam1($team1)
     {
+        if($team1 instanceof Team)
+        {
             $this->team1=$team1;        
+        }
+        else if(is_int($team1) && $team1)
+        {
+            $this->team1->load($team1);
+        }
+        else
+        {
+            $this->team1=new Team();
+        }
     }
     public function setTeam2($team2)
     {
+        if($team2 instanceof Team)
+        {
             $this->team2=$team2;        
+        }
+        else if(is_int($team2) && $team2)
+        {
+            $this->team2->load($team2);
+        }
+        else
+        {
+            $this->team2=new Team();
+        }
     }
     public function setZeitpunkt($zeitpunkt)
     {
@@ -191,7 +196,18 @@ class Match extends AbstractBaseClass
     }
     public function setStadion($stadion)
     {
+        if($stadion instanceof Stadion)
+        {
             $this->stadion=$stadion;        
+        }
+        else if(is_int($stadion) && $stadion)
+        {
+            $this->stadion->load($stadion);
+        }
+        else
+        {
+            $this->stadion=new Stadion();
+        }
     }
     public function setZuschauzahl($zuschauzahl)
     {
@@ -210,88 +226,29 @@ class Match extends AbstractBaseClass
 
     public function setValues($id,$team1,$team2,$zeitpunkt,$halbzeit1,$halbzeit2,$stadion,$zuschauzahl)
     {
-        if(static::$db==null)
-        {
-            static::$db=DB::getDB();
-        }
+        static::initDB();
         $this->setId($id);
-        if($team1 instanceof Team && $team2 instanceof Team && $stadion instanceof Stadion) 
-        {
-            $this->setTeam1($team1);
-            $this->setTeam2($team2);
-            $this->setStadion($stadion);
-        }
-        else 
-        {
-            $stmt=static::$db->prepare("SELECT t1.*,t2.*,s.*,m.* FROM spiel m "
-                    . "LEFT JOIN t1.id=m.team1id ON team t1 "
-                    . "LEFT JOIN t2.id=m.team2id ON team t2 "
-                    . "LEFT JOIN s.id=m.stadionid ON stadion s "
-                    . "WHERE m.team1id=:team1id AND m.team2is=:team2id AND m.stadionid=:stadionid");
-            $stmt->bindValue(":team1id",$team1 instanceof Team?$team1->getId():$team1);
-            $stmt->bindValue(":team2id",$team2 instanceof Team?$team2->getId():$team2);
-            $stmt->bindValue(":stadionid",$stadion instanceof Stadion?$stadion->getId():$stadion);
-            
-            if($stmt->execute())
-            {
-                $joincolumns=array();
-                $joinarray=array();
-
-                $joincolumns=array_merge($joincolumns, Team::getColumns("team1"));
-                $joincolumns=array_merge($joincolumns, Team::getColumns("team2"));
-                $joincolumns=array_merge($joincolumns, Stadion::getColumns("stadion"));
-                $joincolumns=array_merge($joincolumns, Match::getColumns("match"));
-                for($i=1;$i<=count($joincolumns);$i++)
-                {
-                    $stmt->bindColumn($i,$joinarray[$joincolumns[$i-1]]);
-                }
-
-                if($stmt->fetch(PDO::FETCH_BOUND))
-                {
-                    $team1_temp=new Team();
-                    $team1_temp->setValues($joinarray["team1id"], $joinarray["team1name"]);
-                    $team2_temp=new Team();
-                    $team2_temp->setValues($joinarray["team2id"], $joinarray["team2name"]);
-                    $stadion_temp=new Stadion();
-                    $stadion_temp->setValues($joinarray["stadionid"], $joinarray["stadionname"], $joinarray["stadionort"], $joinarray["stadionkapaitaet"]);
-                    $this->setTeam1($team1_temp);
-                    $this->setTeam2($team2_temp);
-                    $this->setStadion($stadion_temp);
-                }
-            }
-        }
-        
+        $this->setTeam1($team1);
+        $this->setTeam2($team2);
         $this->setZeitpunkt($zeitpunkt);
         $this->setHalbzeit1($halbzeit1);
         $this->setHalbzeit2($halbzeit2);
-        
+        $this->setStadion($stadion);
         $this->setZuschauzahl($zuschauzahl);
     }
     public static function getAll() 
     {
-        if(static::$db==null)
+        static::initDB();
+        if(static::$all_elements==null)
         {
-            static::$db=DB::getDB();
-        }
-        if(static::$return_array==null)
-        {
-            $stmt=static::$db->prepare("SELECT t1.*,t2.*,s.*,m.* FROM spiel m LEFT JOIN team t1 ON t1.id=m.team1id LEFT JOIN team t2 ON t2.id=m.team2id LEFT JOIN stadion s ON s.id=m.stadionid");
+            $stmt=static::$db->prepare("SELECT m.*,t1.*,t2.*,s.* FROM spiel m LEFT JOIN team t1 ON t1.id=m.team1id LEFT JOIN team t2 ON t2.id=m.team2id LEFT JOIN stadion s ON s.id=m.stadionid");
             $error="";
-            static::$return_array=array();
+            static::$all_elements=array();
             if($stmt->execute())
             {
-                $joincolumns=array();
-                $joinarray=array();
-                $joincolumns=array_merge($joincolumns, Team::getColumns("team1"));
-                $joincolumns=array_merge($joincolumns, Team::getColumns("team2"));
-                $joincolumns=array_merge($joincolumns, Stadion::getColumns("stadion"));
-                $joincolumns=array_merge($joincolumns, Match::getColumns("match"));
-  
-                for($i=1;$i<=count($joincolumns);$i++)
-                {
-                    $stmt->bindColumn($i,$joinarray[$joincolumns[$i-1]]);
-                }
-                
+                $joinarray=static::getJoinArray($stmt,array_merge(Match::getColumns("spiel"),Team::getColumns("team1"),
+                                                              Team::getColumns("team2"),Stadion::getColumns("stadion")));
+                 
                 while ($result=$stmt->fetch(PDO::FETCH_BOUND))
                 {             
                     $team1_temp=new Team();
@@ -303,12 +260,12 @@ class Match extends AbstractBaseClass
                     $match_temp=new Match();
                     $match_temp->setValues($joinarray["matchid"], $team1_temp, $team2_temp, $joinarray["matchzeitpunkt"], $joinarray["matchhalbzeit1"], $joinarray["matchhalbzeit2"], $stadion_temp, $joinarray["matchzuschauzahl"], $joinarray["matchendstand1"], $joinarray["matchendstand2"]);
                  
-                    array_push(static::$return_array,$match_temp);
+                    array_push(static::$all_elements,$match_temp);
                 }
 
             }
         }
-        return static::$return_array;
+        return static::$all_elements;
     }        
     public function getDescription()
     {
