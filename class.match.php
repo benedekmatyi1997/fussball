@@ -6,11 +6,12 @@ require_once("class.AbstractBaseClass.php");
 
 class Match extends AbstractBaseClass 
 {
-    protected static $columns=array("id","team1","team2","zeitpunkt","halbzeit1","halbzeit2","stadion","zuschauzahl","endstand1","endstand2");
+    protected static $columns=array("id","team1","team2","saison","zeitpunkt","halbzeit1","halbzeit2","stadion","zuschauzahl","endstand1","endstand2");
 
     private $id;
     private $team1;
     private $team2;
+    private $saison;
     private $zeitpunkt;
     private $halbzeit1;
     private $halbzeit2;
@@ -33,12 +34,12 @@ class Match extends AbstractBaseClass
     public function update()
     {
         static::initDB();
-        $insert="INSERT INTO spiel (id,team1,team2,zeitpunkt,halbzeit1,halbzeit2,stadion,zuschauzahl) VALUES (:id,:team1,:team2,:zeitpunkt,:halbzeit1,:halbzeit2,:stadion,:zuschauzahl)";
+        $insert="INSERT INTO spiel (id,team1,team2,saison,zeitpunkt,halbzeit1,halbzeit2,stadion,zuschauzahl) VALUES (:id,:team1,:team2,:saison,:zeitpunkt,:halbzeit1,:halbzeit2,:stadion,:zuschauzahl)";
         if($this->id != 0)
         {
             $stmt=static::$db->prepare("$insert
                         ON DUPLICATE KEY
-                        UPDATE team1=:team1,team2=:team2,zeitpunkt=:zeitpunkt,".
+                        UPDATE team1=:team1,team2=:team2,saison=:saison,zeitpunkt=:zeitpunkt,".
                         "halbzeit1=:halbzeit1,halbzeit2=:halbzeit2,stadion=:stadion,zuschauzahl=:zuschauzahl");
             
         }
@@ -51,6 +52,7 @@ class Match extends AbstractBaseClass
         $stmt->bindValue(":id",$this->id);
         $stmt->bindValue(":team1",$this->team1->getId());
         $stmt->bindValue(":team2",$this->team2->getId());
+        $stmt->bindValue(":team2",$this->saison);
         $stmt->bindValue(":zeitpunkt",$this->zeitpunkt);
         $stmt->bindValue(":halbzeit1",$this->halbzeit1);
         $stmt->bindValue(":halbzeit2",$this->halbzeit2);
@@ -84,6 +86,7 @@ class Match extends AbstractBaseClass
                 $this->stadion->setValues($joinarray["stadionid"],$joinarray["stadionname"],$joinarray["stadionort"],$joinarray["stadionkapazitaet"]);
                 $this->team1->setValues($joinarray["team1id"], $joinarray["team1name"]);
                 $this->team2->setValues($joinarray["team2id"], $joinarray["team2name"]);
+                $this->saison=$joinarray["spielsaison"];
                 $this->id=$joinarray["spielid"];
                 $this->zeitpunkt=$joinarray["spielzeitpunkt"];
                 $this->halbzeit1=$joinarray["spielhalbzeit1"];
@@ -114,15 +117,19 @@ class Match extends AbstractBaseClass
     {
             return $this->team1;
     }
-     public function getTeam2():Team
+    public function getTeam2():Team
     {
             return $this->team2;
     }
-     public function getZeitpunkt()
+    public function getSaison()
+    {
+        return $this->saison;
+    }
+    public function getZeitpunkt()
     {
             return $this->zeitpunkt;
     }
-     public function getHalbzeit1()
+    public function getHalbzeit1()
     {
             return $this->halbzeit1;
     }
@@ -158,7 +165,7 @@ class Match extends AbstractBaseClass
         {
             $this->team1=$team1;        
         }
-        else if(is_int($team1) && $team1)
+        else if(is_numeric($team1) && $team1)
         {
             $this->team1->load($team1);
         }
@@ -173,7 +180,7 @@ class Match extends AbstractBaseClass
         {
             $this->team2=$team2;        
         }
-        else if(is_int($team2) && $team2)
+        else if(is_numeric($team2) && $team2)
         {
             $this->team2->load($team2);
         }
@@ -200,7 +207,7 @@ class Match extends AbstractBaseClass
         {
             $this->stadion=$stadion;        
         }
-        else if(is_int($stadion) && $stadion)
+        else if(is_numeric($stadion) && $stadion)
         {
             $this->stadion->load($stadion);
         }

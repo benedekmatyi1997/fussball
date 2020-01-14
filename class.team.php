@@ -27,6 +27,7 @@ class Team extends AbstractBaseClass
             $result=$stmt->fetch();
             if($result)
             {
+                $this->id=$id;                
                 $this->name=$result["name"];
             }
             else

@@ -40,6 +40,7 @@ class Spieler2Team extends AbstractBaseClass
 
             if($result)
             {
+                $this->id=$id;                
                 $this->spieler->setValues($joinarray["spielerid"],$joinarray["spielervorname"],
                                           $joinarray["spielernachname"],$joinarray["spielergeburtsdatum"]);
                 $this->team=new Team();
@@ -118,7 +119,7 @@ class Spieler2Team extends AbstractBaseClass
         {
             $this->team=$team;        
         }
-        else if(is_int($team) && $team)
+        else if(is_numeric($team) && $team)
         {
             $this->team->load($team);
         }
@@ -133,7 +134,7 @@ class Spieler2Team extends AbstractBaseClass
         {
             $this->spieler=$spieler;        
         }
-        else if(is_int($spieler) && $spieler)
+        else if(is_numeric($spieler) && $spieler)
         {
             $this->spieler->load($spieler);
         }

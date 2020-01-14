@@ -37,6 +37,7 @@ class Team2Stadion extends AbstractBaseClass
             $result=$stmt->fetch(PDO::FETCH_BOUND);
             if($result)
             {
+                $this->id=$id;                
                 $this->stadion=new Stadion();
                 $this->stadion->setValues($joinarray["stadionid"],$joinarray["stadionname"],$joinarray["stadionort"],$joinarray["stadionkapazitaet"]);
                 $this->team=new Team();
@@ -111,7 +112,7 @@ class Team2Stadion extends AbstractBaseClass
         {
             $this->team=$team;        
         }
-        else if(is_int($team) && $team)
+        else if(is_numeric($team) && $team)
         {
             $this->team1->load($team);
         }
@@ -126,7 +127,7 @@ class Team2Stadion extends AbstractBaseClass
         {
             $this->stadion=$stadion;        
         }
-        else if(is_int($stadion) && $stadion)
+        else if(is_numeric($stadion) && $stadion)
         {
             $this->stadion->load($stadion);
         }

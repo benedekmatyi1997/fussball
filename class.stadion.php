@@ -30,6 +30,7 @@ class Stadion extends AbstractBaseClass
             $result=$stmt->fetch();
             if($result)
             {
+                $this->id=$id;                
                 $this->name=$result["name"];
                 $this->ort=$result["ort"];
                 $this->kapazitaet=$result["kapazitaet"];

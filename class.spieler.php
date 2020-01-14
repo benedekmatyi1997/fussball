@@ -30,6 +30,7 @@ class Spieler extends AbstractBaseClass
             $result=$stmt->fetch();
             if($result)
             {
+                $this->id=$id;
                 $this->vorname=$result["vorname"];
                 $this->nachname=$result["nachname"];
                 $this->geburtsdatum=$result["geburtsdatum"];

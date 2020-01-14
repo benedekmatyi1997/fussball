@@ -21,7 +21,7 @@ class Spielereignis extends AbstractBaseClass
         $this->setMatch(0);
         if($id!=0)
         {
-            load($id);
+            $this->load($id);
         }
     }
     public function load($id)
@@ -32,26 +32,30 @@ class Spielereignis extends AbstractBaseClass
         $error="";
         if($stmt->execute())
         {
-            $joinarray=static::getJoinArray($stmt,array_merge(Spielereignis::getColumns("spielereignis"),Spieler::getColumns("spieler"),Match::getColumns("spiel")));
+            $joinarray=static::getJoinArray($stmt,Spielereignis::getColumns());
             
             $result=$stmt->fetch(PDO::FETCH_BOUND);
-                if($result)
-                {
-                    $this->spieler->setValues($joinarray["spielerid"],$joinarray["spielervorname"],$joinarray["spielernachname"],$joinarray["spielergeburtsdatum"]);
-                    $this->match->setValues($joinarray["spielid"], $joinarray["spielteam1"], $joinarray["spielteam2"], $joinarray["spielzeitpunkt"], $joinarray["spielhalbzeit1"], $joinarray["spielhalbzeit2"],$joinarray["spielstadion"],$joinarray["spielzuschauzahl"]);
-                    $this->von=$joinarray["typ"];
-                    $this->bis=$joinarray["minute"];
-                }
-            }
-            else
+            $debug=0;
+            if($result)
             {
-                $error.=$stmt->errorInfo()[2];
-            }
-            if(strlen($error))
-            {
-                throw new Exception($error);
-            }
-        }
+                $this->id=$id;                
+                $debug && print(is_numeric($joinarray["spieler"]).PHP_EOL);
+                $this->setSpieler($joinarray["spieler"]);
+                $debug && print($joinarray["match"].PHP_EOL);
+                $this->setMatch($joinarray["match"]);
+                $this->von=$joinarray["typ"];
+                $this->bis=$joinarray["minute"];
+			}
+		}
+		else
+		{
+			$error.=$stmt->errorInfo()[2];
+		}
+		if(strlen($error))
+		{
+			throw new Exception($error);
+		}
+	}
     public function update()
     {
         static::initDB();
@@ -115,7 +119,7 @@ class Spielereignis extends AbstractBaseClass
         {
             $this->match=$match;        
         }
-        else if(is_int($match) && $match)
+        else if(is_numeric($match) && $match)
         {
             $this->match->load($match);
         }
@@ -130,7 +134,7 @@ class Spielereignis extends AbstractBaseClass
         {
             $this->spieler=$spieler;        
         }
-        else if(is_int($spieler) && $spieler)
+        else if(is_numeric($spieler) && $spieler)
         {
             $this->spieler->load($spieler);
         }
