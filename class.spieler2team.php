@@ -7,7 +7,7 @@ require_once("class.AbstractBaseClass.php");
 class Spieler2Team extends AbstractBaseClass
 {
     protected static $columns=array("id","spieler","team","von","bis");
-    
+    protected static $all_elements=array();
     private $id;
     private $spieler;
     private $team;
@@ -21,7 +21,7 @@ class Spieler2Team extends AbstractBaseClass
         $this->setTeam(0);
         if($id!=0)
         {
-                load($id);
+                $this->load($id);
         }
     }
     public function load($id)
@@ -29,10 +29,10 @@ class Spieler2Team extends AbstractBaseClass
         static::initDB();
         $stmt=static::$db->prepare("SELECT s2t.*,sp.*,t.* FROM spieler2team s2t ".
                                     "LEFT JOIN team t ON s2t.teamid=t.id ".
-                                    "LEFT JOIN spieler sp ON s2t.spieler=sp.id WHERE id=:id");
+                                    "LEFT JOIN spieler sp ON s2t.spielerid=sp.id WHERE s2t.id=:id");
         $stmt->bindValue(":id",$id);
         $error="";
-        if($stmt->execute())
+        if(DB::execute($stmt))
         {
             $joinarray=static::getJoinArray($stmt,array_merge(Spieler2Team::getColumns("s2t"),Spieler::getColumns("spieler"),Team::getColumns("team")));
             
@@ -44,7 +44,7 @@ class Spieler2Team extends AbstractBaseClass
                 $this->spieler->setValues($joinarray["spielerid"],$joinarray["spielervorname"],
                                           $joinarray["spielernachname"],$joinarray["spielergeburtsdatum"]);
                 $this->team=new Team();
-                $this->team->setValues($joinarray["teamid"], $joinarray["teamname"]);
+                $this->team->setValues($joinarray["teamid"], $joinarray["teamname"], $joinarray["teamregion"]);
                 $this->von=$joinarray["s2tvon"];
                 $this->bis=$joinarray["s2tbis"];
             }
@@ -52,10 +52,6 @@ class Spieler2Team extends AbstractBaseClass
             {
                 $error.="Leeres Resultat";
             }
-        }
-        else
-        {
-            $error.=$stmt->errorInfo()[2];
         }
         if(strlen($error))
         {
@@ -84,10 +80,7 @@ class Spieler2Team extends AbstractBaseClass
         $stmt->bindValue(":von",$this->von);
         $stmt->bindValue(":bis",$this->bis);
 
-        if(!$stmt->execute())
-        {
-            throw new Exception($stmt->errorInfo()[2]);
-        }
+        DB::execute($stmt);
     }
     public function getId()
     {
@@ -165,17 +158,17 @@ class Spieler2Team extends AbstractBaseClass
         static::initDB();
         if(static::$all_elements==null)
         {
-            $stmt=static::$db->prepare("SELECT s2t.*,sp.*,t.* FROM spieler2team ".
+            $stmt=static::$db->prepare("SELECT s2t.*,sp.*,t.* FROM spieler2team s2t ".
                                         "LEFT JOIN team t ON s2t.teamid=t.id ".
-                                        "LEFT JOIN spieler sp ON s2t.spieler=sp.id");
+                                        "LEFT JOIN spieler sp ON s2t.spielerid=sp.id");
             $error="";
-            if($stmt->execute())
+            if(DB::execute($stmt))
             {
                 $joinarray=static::getJoinArray($stmt,array_merge(Spieler2Team::getColumns("s2t"),Spieler::getColumns("spieler"),Team::getColumns("team")));
                 while ($result=$stmt->fetch(PDO::FETCH_BOUND))
                 {
                     $team_temp=new Team();
-                    $team_temp->setValues($result["teamid"], $result["teamname"]);
+                    $team_temp->setValues($result["teamid"], $result["teamname"], $result["teamregion"]);
                     $spieler_temp=new Spieler();
                     $spieler_temp->setValues($result["spielerid"], $result["spielervorname"], $result["spielernachname"], $result["spielergeburtsdatum"]);
                     $s2t_temp=new Spieler2Team();
@@ -202,7 +195,7 @@ class Spieler2Team extends AbstractBaseClass
         $stmt->bindValue(":team1",$team1);
         $stmt->bindValue(":team2",$team2);
         $stmt->bindValue(":date",$date);
-        if($stmt->execute())
+        if(DB::execute($stmt))
         {
             $joinarray=static::getJoinArray($stmt,array_merge(Spieler2Team::getColumns("s2t"),Team::getColumns("team"),Spieler::getColumns("spieler")));
 
@@ -213,14 +206,11 @@ class Spieler2Team extends AbstractBaseClass
                 $temp_element["team"]=new Team();
                 $temp_element["spieler"]->setValues($joinarray["spielerid"], $joinarray["spielervorname"], 
                                                     $joinarray["spielernachname"], $joinarray["spielergeburtsdatum"]);
-                $temp_element["team"]->setValues($joinarray["teamid"], $joinarray["teamname"]);
+                $temp_element["team"]->setValues($joinarray["teamid"], $joinarray["teamname"], $joinarray["teamregion"]);
                 array_push($return_array,$temp_element);
             }
         }
-        else 
-        {
-            throw new Exception($stmt->errorInfo()[2]);
-        }
+        
         return $return_array;
     }
 }

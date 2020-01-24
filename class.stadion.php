@@ -4,6 +4,7 @@ require_once("class.AbstractBaseClass.php");
 class Stadion extends AbstractBaseClass
 {
     protected static $columns=array("id","name","ort","kapazitaet");
+    protected static $all_elements=array();
     private $id;
     private $name;
     private $ort;
@@ -25,7 +26,7 @@ class Stadion extends AbstractBaseClass
                 ->prepare("SELECT * FROM stadion WHERE id=:id");
         $stmt->bindValue(":id",$id);
         $error="";
-        if($stmt->execute())
+        if(DB::execute($stmt))
         {
             $result=$stmt->fetch();
             if($result)
@@ -39,10 +40,6 @@ class Stadion extends AbstractBaseClass
             {
                 $error.="Leeres Resultat";
             }
-        }
-        else
-        {
-            $error.=$stmt->errorInfo()[2];
         }
         if(strlen($error))
         {
@@ -68,17 +65,7 @@ class Stadion extends AbstractBaseClass
         $stmt->bindValue(":name",$this->name);
         $stmt->bindValue(":ort",$this->ort);
         $stmt->bindValue(":kapazitaet",$this->kapazitaet);
-        if(!$stmt->execute())
-        {
-            throw new Exception($stmt->errorInfo()[2]);
-        }        
-    }
-    public function get_as_array()
-    {
-        return array("Id" => $this->getId(),
-                     "name" => $this->getVorname(),
-                     "ort" => $this->getOrt(),
-                     "kapazitaet" => $this->getKapazitaet());
+        DB::execute($stmt);        
     }
     public function getId()
     {
@@ -127,7 +114,7 @@ class Stadion extends AbstractBaseClass
             static::$all_elements=array();
             $stmt=static::$db->prepare("SELECT * FROM stadion");
             $error="";
-            if($stmt->execute())
+            if(DB::execute($stmt))
             {
                     $joinarray=static::getJoinArray($stmt,array_merge(static::getColumns("stadion")));
 

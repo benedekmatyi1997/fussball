@@ -7,6 +7,7 @@ require_once("class.AbstractBaseClass.php");
 class Team2Stadion extends AbstractBaseClass
 {
     protected static $columns=array("id","team","stadion","von","bis");
+    protected static $all_elements=array();
     private $id;
     private $team;
     private $stadion;
@@ -20,16 +21,16 @@ class Team2Stadion extends AbstractBaseClass
         $this->setStadion(0);
         if($id!=0)
         {
-            load($id);
+            $this->load($id);
         }
     }
     public function load($id)
     {
         static::initDB();
-        $stmt=$this->db->prepare("SELECT * FROM team2stadion WHERE id=:id");
+        $stmt= static::$db->prepare("SELECT * FROM team2stadion WHERE id=:id");
         $stmt->bindValue(":id",$id);
         $error="";
-        if($stmt->execute())
+        if(DB::execute($stmt))
         {
         
             $joinarray=static::getJoinArray($stmt,array_merge(Team2Stadion::getColumns("t2s"),Team::getColumns("team"),Stadion::getColumns("stadion")));
@@ -41,14 +42,10 @@ class Team2Stadion extends AbstractBaseClass
                 $this->stadion=new Stadion();
                 $this->stadion->setValues($joinarray["stadionid"],$joinarray["stadionname"],$joinarray["stadionort"],$joinarray["stadionkapazitaet"]);
                 $this->team=new Team();
-                $this->team->setValues($joinarray["teamid"], $joinarray["teamname"]);
+                $this->team->setValues($joinarray["teamid"], $joinarray["teamname"], $joinarray["teamregion"]);
                 $this->von=$joinarray["t2svon"];
                 $this->bis=$joinarray["t2sbis"];
             }
-        }
-        else
-        {
-            $error.=$stmt->errorInfo()[2];
         }
         if(strlen($error))
         {
@@ -77,10 +74,7 @@ class Team2Stadion extends AbstractBaseClass
         $stmt->bindValue(":von",$this->von);
         $stmt->bindValue(":bis",$this->bis);
         
-        if(!$stmt->execute())
-        {
-            throw new Exception($stmt->errorInfo()[2]);
-        }
+        DB::execute($stmt);
     }
     public function getId()
     {
@@ -156,16 +150,18 @@ class Team2Stadion extends AbstractBaseClass
     {
         if(static::$all_elements==null)
         {
-            $stmt=$this->db->prepare("SELECT t2s.*,t.*,s.* FROM team2stadion LEFT JOIN team t ON t2s.teamid=t.id LEFT JOIN stadion s ON t2s.stadion=s.id");
+            $stmt= static::$db->prepare("SELECT t2s.*,t.*,s.* FROM team2stadion t2s "
+                    . "LEFT JOIN team t ON t2s.teamid=t.id "
+                    . "LEFT JOIN stadion s ON t2s.stadionid=s.id");
             $error="";
             static::$all_elements=array();
-            if($stmt->execute())
+            if(DB::execute($stmt))
             {
                 $joinarray=static::getJoinArray($stmt,array_merge(Team2Stadion::getColumns("t2s"),Team::getColumns("team"),Stadion::getColumns("stadion")));
                 while ($result=$stmt->fetch(PDO::FETCH_BOUND))
                 {
                     $team_temp=new Team();
-                    $team_temp->setValues($result["teamid"], $result["teamname"]);
+                    $team_temp->setValues($result["teamid"], $result["teamname"], $result["teamregion"]);
                     $stadion_temp=new Stadion();
                     $stadion_temp->setValues($result["stadionid"], $result["stadionname"], $result["stadionort"], $result["stadionkapazitaet"]);
                     $t2s_temp=new Team2Stadion();

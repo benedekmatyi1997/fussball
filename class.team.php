@@ -3,9 +3,11 @@ require_once("class.db.php");
 require_once("class.AbstractBaseClass.php");
 class Team extends AbstractBaseClass
 {
-    protected static $columns=array("id","name");
+    protected static $columns=array("id","name","region");
+    protected static $all_elements=array();
     private $id;
     private $name;
+    private $region;
 
     public function __construct($id=0)
     {
@@ -22,22 +24,19 @@ class Team extends AbstractBaseClass
         $stmt=static::$db->prepare("SELECT * FROM team WHERE id=:id");
         $stmt->bindValue(":id",$id);
         $error="";
-        if($stmt->execute())
+        if(DB::execute($stmt))
         {
             $result=$stmt->fetch();
             if($result)
             {
                 $this->id=$id;                
                 $this->name=$result["name"];
+                $this->name=$result["region"];
             }
             else
             {
                 $error.="Leeres Resultat";
             }
-        }
-        else
-        {
-            $error.=$stmt->errorInfo()[2];
         }
         if(strlen($error))
         {
@@ -47,12 +46,12 @@ class Team extends AbstractBaseClass
     public function update()
     {
         static::initDB();
-        $insert="INSERT INTO team (id,name) VALUES (:id,:name)";
+        $insert="INSERT INTO team (id,name,region) VALUES (:id,:name,:region)";
         if($this->id != 0)
         {
             $stmt=static::$db->prepare("$insert 
                                       ON DUPLICATE KEY 
-                                      UPDATE team SET name=:name WHERE id=:id");
+                                      UPDATE team SET name=:name,region=:region WHERE id=:id");
             
         }
         else
@@ -60,17 +59,10 @@ class Team extends AbstractBaseClass
             $stmt=static::$db->prepare($insert);
             
         }
-                $stmt->bindValue(":id",$this->id);
+        $stmt->bindValue(":id",$this->id);
         $stmt->bindValue(":name",$this->name);
-        if(!$stmt->execute())
-        {
-            throw new Exception($stmt->errorInfo()[2]);
-        }        
-    }
-    public function get_as_array()
-    {
-        return array("Id" => $this->getId(),
-                     "name" => $this->getName());
+        $stmt->bindValue(":name",$this->region);
+        DB::execute($stmt);       
     }
     public function getId()
     {
@@ -80,6 +72,10 @@ class Team extends AbstractBaseClass
     {
         return $this->name;
     }
+    public function getRegion()
+    {
+        return $this->region;
+    }
     public function setId($id)
     {
         $this->id=$id;
@@ -88,10 +84,15 @@ class Team extends AbstractBaseClass
     {
         $this->name=$name;
     }
-    public function setValues($id,$name)
+    public function setRegion($region)
+    {
+        $this->region=$region;
+    }
+    public function setValues($id,$name,$region)
     {
         $this->setId($id);
         $this->setName($name);
+        $this->setRegion($region);
     }
     public static function getAll()
     {
@@ -102,14 +103,14 @@ class Team extends AbstractBaseClass
             $stmt=static::$db->prepare("SELECT * FROM team");
             $error="";
 
-            if($stmt->execute())
+            if(DB::execute($stmt))
             {
                     $joinarray=static::getJoinArray($stmt,Team::getColumns("team"));
 
                     while ($result=$stmt->fetch(PDO::FETCH_BOUND))
                     {
                         $team_temp=new Team();
-                        $team_temp->setValues($joinarray["teamid"], $joinarray["teamname"]);
+                        $team_temp->setValues($joinarray["teamid"], $joinarray["teamname"], $joinarray["teamregion"]);
                         array_push(static::$all_elements,$team_temp);
                     }
 
