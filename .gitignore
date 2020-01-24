@@ -2,6 +2,7 @@
 /db_config.inc.php
 /test*
 /nbproject/*
+*.dia~
 SELECT_foreach.txt
 _teststuff.php
 smarty.inc.php
