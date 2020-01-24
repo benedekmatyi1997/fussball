@@ -34,13 +34,14 @@ class Match extends AbstractBaseClass
     public function update()
     {
         static::initDB();
-        $insert="INSERT INTO spiel (id,team1,team2,saison,zeitpunkt,halbzeit1,halbzeit2,stadion,zuschauzahl) VALUES (:id,:team1,:team2,:saison,:zeitpunkt,:halbzeit1,:halbzeit2,:stadion,:zuschauzahl)";
+        $insert="INSERT INTO spiel (id,team1,team2,saison,zeitpunkt,halbzeit1,halbzeit2,stadion,zuschauzahl,endstand1,endstand2) "
+              . "VALUES (:id,:team1,:team2,:saison,:zeitpunkt,:halbzeit1,:halbzeit2,:stadion,:zuschauzahl,:endstand1,:endstand2)";
         if($this->id != 0)
         {
             $stmt=static::$db->prepare("$insert
                         ON DUPLICATE KEY
                         UPDATE team1=:team1,team2=:team2,saison=:saison,zeitpunkt=:zeitpunkt,".
-                        "halbzeit1=:halbzeit1,halbzeit2=:halbzeit2,stadion=:stadion,zuschauzahl=:zuschauzahl");
+                        "halbzeit1=:halbzeit1,halbzeit2=:halbzeit2,stadion=:stadion,zuschauzahl=:zuschauzahl,endstand1=:endstand1,endstand2=:endstand2");
             
         }
         else
@@ -52,12 +53,14 @@ class Match extends AbstractBaseClass
         $stmt->bindValue(":id",$this->id);
         $stmt->bindValue(":team1",$this->team1->getId());
         $stmt->bindValue(":team2",$this->team2->getId());
-        $stmt->bindValue(":team2",$this->saison);
+        $stmt->bindValue(":saison",$this->saison);
         $stmt->bindValue(":zeitpunkt",$this->zeitpunkt);
         $stmt->bindValue(":halbzeit1",$this->halbzeit1);
         $stmt->bindValue(":halbzeit2",$this->halbzeit2);
         $stmt->bindValue(":stadion",$this->stadion->getId());
         $stmt->bindValue(":zuschauzahl",$this->zuschauzahl);
+        $stmt->bindValue(":endstand1",$this->endstand1);
+        $stmt->bindValue(":endstand2",$this->endstand2);
         
         if(!$stmt->execute())
         {
@@ -189,6 +192,10 @@ class Match extends AbstractBaseClass
             $this->team2=new Team();
         }
     }
+    public function setSaison($saison)
+    {
+        $this->saison=$saison;
+    }
     public function setZeitpunkt($zeitpunkt)
     {
             $this->zeitpunkt=$zeitpunkt;        
@@ -231,17 +238,21 @@ class Match extends AbstractBaseClass
         $this->endstand2 = $endstand2;
     }
 
-    public function setValues($id,$team1,$team2,$zeitpunkt,$halbzeit1,$halbzeit2,$stadion,$zuschauzahl)
+
+    public function setValues($id,$team1,$team2,$saison,$zeitpunkt,$halbzeit1,$halbzeit2,$stadion,$zuschauzahl,$endstand1,$endstand2)
     {
         static::initDB();
         $this->setId($id);
         $this->setTeam1($team1);
         $this->setTeam2($team2);
+        $this->setSaison($saison);
         $this->setZeitpunkt($zeitpunkt);
         $this->setHalbzeit1($halbzeit1);
         $this->setHalbzeit2($halbzeit2);
         $this->setStadion($stadion);
         $this->setZuschauzahl($zuschauzahl);
+        $this->setEndstand1($endstand1);
+        $this->setEndstand2($endstand2);
     }
     public static function getAll() 
     {
@@ -265,7 +276,9 @@ class Match extends AbstractBaseClass
                     $stadion_temp=new Stadion();
                     $stadion_temp->setValues($joinarray["stadionid"], $joinarray["stadionname"], $joinarray["stadionort"], $joinarray["stadionkapazitaet"]);
                     $match_temp=new Match();
-                    $match_temp->setValues($joinarray["matchid"], $team1_temp, $team2_temp, $joinarray["matchzeitpunkt"], $joinarray["matchhalbzeit1"], $joinarray["matchhalbzeit2"], $stadion_temp, $joinarray["matchzuschauzahl"], $joinarray["matchendstand1"], $joinarray["matchendstand2"]);
+                    $match_temp->setValues($joinarray["matchid"], $team1_temp, $team2_temp, $joinarray["matchsaison"], $joinarray["matchzeitpunkt"], 
+                                           $joinarray["matchhalbzeit1"], $joinarray["matchhalbzeit2"], $stadion_temp, $joinarray["matchzuschauzahl"], 
+                                           $joinarray["matchendstand1"], $joinarray["matchendstand2"]);
                  
                     array_push(static::$all_elements,$match_temp);
                 }

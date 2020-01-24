@@ -215,6 +215,13 @@ ALTER TABLE `team2stadion`
   
 ALTER TABLE `spiel` ADD `saison` INT NOT NULL AFTER `team2id`;
   
+RENAME TABLE `fussball`.`land` TO `fussball`.`region`;
+
+ALTER TABLE `region` ADD `uebergeordnet` INT NOT NULL AFTER `code`, ADD `typ` ENUM('kontinent','land','region','') NOT NULL AFTER `uebergeordnet`;
+ALTER TABLE `liga` CHANGE `land` `region` INT(11) NOT NULL;
+ALTER TABLE `saison` ADD `aufstieg` INT NOT NULL AFTER `liga`;
+ALTER TABLE `team` ADD `region` INT NOT NULL AFTER `name`;
+
 COMMIT;
 
 

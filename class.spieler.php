@@ -76,13 +76,6 @@ class Spieler extends AbstractBaseClass
             throw new Exception($stmt->errorInfo()[2]);
         }        
     }
-    public function get_as_array()
-    {
-        return array("Id" => $this->getId(),
-                     "vorname" => $this->getVorname(),
-                     "nachname" => $this->getNachname(),
-                     "geburtsdatum" => $this->getGeburtsdatum());
-    }
     public function setValues($id,$vorname,$nachname,$geburtsdatum)
     {
         $this->setId($id);

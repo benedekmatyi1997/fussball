@@ -176,21 +176,28 @@ class Spielereignis extends AbstractBaseClass
         static::initDB();
         if(static::$all_elements==null)
         {
-            $stmt=static::$db->prepare("SELECT m.*,sp.*,se.* FROM spielereignis se LEFT JOIN match m ON m.id=se.matchid LEFT JOIN spieler sp ON sp.id=se.spielerid");
+            $stmt=static::$db->prepare("SELECT m.*,sp.*,se.* FROM spielereignis se "
+                                     . "LEFT JOIN spiel m ON m.id=se.matchid "
+                                     . "LEFT JOIN spieler sp ON sp.id=se.spielerid");
             $error="";
             static::$all_elements=array();
             if($stmt->execute())
             {
-                $joinarray=static::getJoinArray($stmt,array_merge(Match::getColumns("match"),Spieler::getColumns("spieler"),Spielereignis::getColumns("spielereignis")));
+                $joinarray=static::getJoinArray($stmt,array_merge(Match::getColumns("match"),
+                                                                  Spieler::getColumns("spieler"),
+                                                                  Spielereignis::getColumns("spielereignis")));
 
                 while ($result=$stmt->fetch(PDO::FETCH_BOUND))
-                {             
+                {
                     $match_temp=new Match();
-                    $match_temp->setValues($joinarray["matchid"], $joinarray["matchteam1id"], $joinarray["matchteam2id"], $joinarray["matchzeitpunkt"], $joinarray["matchhalbzeit1"], $joinarray["matchhalbzeit2"], $joinarray["matchstadionid"], $joinarray["matchzuschauzahl"], $joinarray["matchendstand1"], $joinarray["matchendstand2"]);
+                    $match_temp->setValues($joinarray["matchid"], $joinarray["matchteam1"], $joinarray["matchteam2"], $joinarray["matchsaison"],  
+                                           $joinarray["matchzeitpunkt"], $joinarray["matchhalbzeit1"], $joinarray["matchhalbzeit2"], 
+                                           $joinarray["matchstadion"], $joinarray["matchzuschauzahl"], 
+                                           $joinarray["matchendstand1"], $joinarray["matchendstand2"]);
                     $spieler_temp=new Spieler();
                     $spieler_temp->setValues($joinarray["spielerid"], $joinarray["spielervorname"], $joinarray["spielernachname"], $joinarray["spielergeburtsdatum"]);
                     $spielereignis_temp=new Spielereignis();
-                    $spielereignis_tempemp->setValues($joinarray["spielereignisid"], $match_temp, $spieler_temp, $joinarray["spielereignisminute"],$joinarray["spielereignisnachspielzeit"], $joinarray["spielereignistyp"]);
+                    $spielereignis_temp->setValues($joinarray["spielereignisid"], $match_temp, $spieler_temp, $joinarray["spielereignisminute"],$joinarray["spielereignisnachspielzeit"], $joinarray["spielereignistyp"]);
 
                     array_push(static::$all_elements,$spielereignis_temp);
                 }
