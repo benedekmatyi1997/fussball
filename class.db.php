@@ -14,4 +14,13 @@ class DB
         }
         return self::$db;
     }
+    public static function execute(PDOStatement $stmt)
+    {
+        $return_code=$stmt->execute();
+        if(!$return_code)
+        {
+            throw new Exception($stmt->errorInfo()[2]);
+        }
+        return $return_code;
+    }
 }

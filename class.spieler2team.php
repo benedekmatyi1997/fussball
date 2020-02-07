@@ -43,7 +43,6 @@ class Spieler2Team extends AbstractBaseClass
                 $this->id=$id;                
                 $this->spieler->setValues($joinarray["spielerid"],$joinarray["spielervorname"],
                                           $joinarray["spielernachname"],$joinarray["spielergeburtsdatum"]);
-                $this->team=new Team();
                 $this->team->setValues($joinarray["teamid"], $joinarray["teamname"], $joinarray["teamregion"]);
                 $this->von=$joinarray["s2tvon"];
                 $this->bis=$joinarray["s2tbis"];
@@ -144,7 +143,7 @@ class Spieler2Team extends AbstractBaseClass
     {
         $this->bis=$bis;        
     }
-    public function setValues($id,$team,$spieler,$von,$bis)
+    public function setValues($id,$spieler,$team,$von,$bis)
     {
         $this->setId($id);
         $this->setSpieler($spieler);
@@ -168,11 +167,11 @@ class Spieler2Team extends AbstractBaseClass
                 while ($result=$stmt->fetch(PDO::FETCH_BOUND))
                 {
                     $team_temp=new Team();
-                    $team_temp->setValues($result["teamid"], $result["teamname"], $result["teamregion"]);
+                    $team_temp->setValues($joinarray["teamid"], $joinarray["teamname"], $joinarray["teamregion"]);
                     $spieler_temp=new Spieler();
-                    $spieler_temp->setValues($result["spielerid"], $result["spielervorname"], $result["spielernachname"], $result["spielergeburtsdatum"]);
+                    $spieler_temp->setValues($joinarray["spielerid"], $joinarray["spielervorname"], $joinarray["spielernachname"], $joinarray["spielergeburtsdatum"]);
                     $s2t_temp=new Spieler2Team();
-                    $s2t_temp->setValues($result["s2tid"],$spieler_temp,$team_temp,$result["s2tvon"],$result["s2tbis"]);
+                    $s2t_temp->setValues($joinarray["s2tid"],$spieler_temp,$team_temp,$joinarray["s2tvon"],$joinarray["s2tbis"]);
                     array_push(static::$all_elements,$s2t_temp);
                 }
 

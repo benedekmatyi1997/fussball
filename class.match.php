@@ -7,7 +7,8 @@ require_once("class.AbstractBaseClass.php");
 class Match extends AbstractBaseClass 
 {
     protected static $columns=array("id","team1","team2","saison","zeitpunkt","halbzeit1","halbzeit2","stadion","zuschauzahl","endstand1","endstand2");
-
+    protected static $all_elements=array();
+    
     private $id;
     private $team1;
     private $team2;
@@ -25,6 +26,7 @@ class Match extends AbstractBaseClass
         $this->id=$id;
         $this->setTeam1(0);
         $this->setTeam2(0);
+        $this->setSaison(0);
         $this->setStadion(0);
         if($id!=0)
         {
@@ -62,34 +64,32 @@ class Match extends AbstractBaseClass
         $stmt->bindValue(":endstand1",$this->endstand1);
         $stmt->bindValue(":endstand2",$this->endstand2);
         
-        if(!$stmt->execute())
-        {
-            throw new Exception($stmt->errorInfo()[2]);
-        }
+        DB::execute($stmt);
     }
     public function load($id)
     {
         static::initDB();
-        $stmt=static::$db->prepare("SELECT s.*,t1.*,t2.*,st.* FROM spiel s "
+        $stmt=static::$db->prepare("SELECT s.*,t1.*,t2.*,st.*,sa.* FROM spiel s "
                 . "LEFT JOIN team t1 ON t1.id=s.team1id "
                 . "LEFT JOIN team t2 ON t2.id=s.team2id "
                 . "LEFT JOIN stadion st ON st.id=s.stadionid "
+                . "LEFT JOIN saison sa ON sa.id=s.saisonid "
                 . "WHERE s.id=:id");
        
         $stmt->bindValue(":id",$id);
         $error="";
-        if($stmt->execute())
+        if(DB::execute($stmt))
         {
             $joinarray=static::getJoinArray($stmt,array_merge(Match::getColumns("spiel"),Team::getColumns("team1"),
-                                                              Team::getColumns("team2"),Stadion::getColumns("stadion")));
+                                                              Team::getColumns("team2"),Stadion::getColumns("stadion"),Saison::getColumns("saison")));
             
             $result=$stmt->fetch(PDO::FETCH_BOUND);
             if($result)
             {                
                 $this->stadion->setValues($joinarray["stadionid"],$joinarray["stadionname"],$joinarray["stadionort"],$joinarray["stadionkapazitaet"]);
-                $this->team1->setValues($joinarray["team1id"], $joinarray["team1name"]);
-                $this->team2->setValues($joinarray["team2id"], $joinarray["team2name"]);
-                $this->saison=$joinarray["spielsaison"];
+                $this->team1->setValues($joinarray["team1id"], $joinarray["team1name"], $joinarray["team1region"]);
+                $this->team2->setValues($joinarray["team2id"], $joinarray["team2name"], $joinarray["team2region"]);
+                $this->saison->setValues($joinarray["saisonid"], $joinarray["saisonliga"], $joinarray["saisonaufstieg"], $joinarray["saisonvon"], $joinarray["saisonbis"]);
                 $this->id=$joinarray["spielid"];
                 $this->zeitpunkt=$joinarray["spielzeitpunkt"];
                 $this->halbzeit1=$joinarray["spielhalbzeit1"];
@@ -102,10 +102,6 @@ class Match extends AbstractBaseClass
             {
                 $error.="Leeres Resultat";
             }
-        }
-        else
-        {
-            $error.=$stmt->errorInfo()[2];
         }
         if(strlen($error))
         {
@@ -194,7 +190,18 @@ class Match extends AbstractBaseClass
     }
     public function setSaison($saison)
     {
-        $this->saison=$saison;
+        if($saison instanceof Saison)
+        {
+            $this->saison=$saison;        
+        }
+        else if(is_numeric($saison) && $saison)
+        {
+            $this->saison->load($saison);
+        }
+        else
+        {
+            $this->saison=new Saison();
+        }
     }
     public function setZeitpunkt($zeitpunkt)
     {
@@ -259,24 +266,30 @@ class Match extends AbstractBaseClass
         static::initDB();
         if(static::$all_elements==null)
         {
-            $stmt=static::$db->prepare("SELECT m.*,t1.*,t2.*,s.* FROM spiel m LEFT JOIN team t1 ON t1.id=m.team1id LEFT JOIN team t2 ON t2.id=m.team2id LEFT JOIN stadion s ON s.id=m.stadionid");
+            $stmt=static::$db->prepare("SELECT m.*,t1.*,t2.*,s.*,sa.* FROM spiel m "
+                                       . "LEFT JOIN team t1 ON t1.id=m.team1id "
+                                       . "LEFT JOIN team t2 ON t2.id=m.team2id "
+                                       . "LEFT JOIN stadion s ON s.id=m.stadionid "
+                                       . "LEFT JOIN saison sa ON sa.id=m.saisonid ");
             $error="";
             static::$all_elements=array();
-            if($stmt->execute())
+            if(DB::execute($stmt))
             {
-                $joinarray=static::getJoinArray($stmt,array_merge(Match::getColumns("spiel"),Team::getColumns("team1"),
-                                                              Team::getColumns("team2"),Stadion::getColumns("stadion")));
+                $joinarray=static::getJoinArray($stmt,array_merge(Match::getColumns("match"),Team::getColumns("team1"),
+                                                              Team::getColumns("team2"),Stadion::getColumns("stadion"),Saison::getColumns("saison")));
                  
                 while ($result=$stmt->fetch(PDO::FETCH_BOUND))
                 {             
                     $team1_temp=new Team();
-                    $team1_temp->setValues($joinarray["team1id"], $joinarray["team1name"]);
+                    $team1_temp->setValues($joinarray["team1id"], $joinarray["team1name"], $joinarray["team1region"]);
                     $team2_temp=new Team();
-                    $team2_temp->setValues($joinarray["team2id"], $joinarray["team2name"]);
+                    $team2_temp->setValues($joinarray["team2id"], $joinarray["team2name"], $joinarray["team2region"]);
                     $stadion_temp=new Stadion();
                     $stadion_temp->setValues($joinarray["stadionid"], $joinarray["stadionname"], $joinarray["stadionort"], $joinarray["stadionkapazitaet"]);
+                    $saison_temp=new Saison();
+                    $saison_temp->setValues($joinarray["saisonid"], $joinarray["saisonliga"], $joinarray["saisonaufstieg"], $joinarray["saisonvon"], $joinarray["saisonbis"]);
                     $match_temp=new Match();
-                    $match_temp->setValues($joinarray["matchid"], $team1_temp, $team2_temp, $joinarray["matchsaison"], $joinarray["matchzeitpunkt"], 
+                    $match_temp->setValues($joinarray["matchid"], $team1_temp, $team2_temp, $saison_temp, $joinarray["matchzeitpunkt"], 
                                            $joinarray["matchhalbzeit1"], $joinarray["matchhalbzeit2"], $stadion_temp, $joinarray["matchzuschauzahl"], 
                                            $joinarray["matchendstand1"], $joinarray["matchendstand2"]);
                  

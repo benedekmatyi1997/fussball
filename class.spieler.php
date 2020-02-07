@@ -6,6 +6,7 @@ require_once("class.AbstractBaseClass.php");
 class Spieler extends AbstractBaseClass
 {
     protected static $columns=array("id","vorname","nachname","geburtsdatum");
+    protected static $all_elements=array();
     private $id;
     private $vorname;
     private $nachname;
@@ -25,7 +26,7 @@ class Spieler extends AbstractBaseClass
         $stmt=static::$db->prepare("SELECT * FROM spieler WHERE id=:id");
         $stmt->bindValue(":id",$id);
         $error="";
-        if($stmt->execute())
+        if(DB::execute($stmt))
         {
             $result=$stmt->fetch();
             if($result)
@@ -39,10 +40,6 @@ class Spieler extends AbstractBaseClass
             {
                 $error.="Leeres Resultat";
             }
-        }
-        else
-        {
-            $error.=$stmt->errorInfo()[2];
         }
         if(strlen($error))
         {
@@ -71,10 +68,7 @@ class Spieler extends AbstractBaseClass
         $stmt->bindValue(":nachname",$this->nachname);
         $stmt->bindValue(":geburtsdatum",$this->geburtsdatum);
                 
-        if(!$stmt->execute())
-        {
-            throw new Exception($stmt->errorInfo()[2]);
-        }        
+        DB::execute($stmt);  
     }
     public function setValues($id,$vorname,$nachname,$geburtsdatum)
     {
@@ -132,26 +126,21 @@ class Spieler extends AbstractBaseClass
             $stmt=static::$db->prepare("SELECT * FROM spieler");
             $error="";
             static::$all_elements=array();
-            if($stmt->execute())
+            if(DB::execute($stmt))
             {                
                 $joinarray=static::getJoinArray($stmt,Spieler::getColumns("spieler"));
                 
                 while ($result=$stmt->fetch(PDO::FETCH_BOUND))
                 {
                     $spieler_temp=new Spieler();
-                    print_r($joinarray);
                     $spieler_temp->setValues($joinarray["spielerid"], $joinarray["spielervorname"], $joinarray["spielernachname"], $joinarray["spielergeburtsdatum"]);
-                    echo($spieler_temp->getId()." ".$spieler_temp->getName()." ");
 
                     array_push(static::$all_elements,$spieler_temp);
                 }
 
             }
         }
-        foreach(static::$all_elements as $spieler_temp)
-        {
-            echo($spieler_temp->getId()." ".$spieler_temp->getName()." ");
-        }
+   
         return static::$all_elements;
     }
 }

@@ -9,9 +9,7 @@ $spielereignisse=Spielereignis::getSpielereignisseForMatch($matchid);
 $match_smarty=array("id"=>$match->getId(),"team1"=>$match->getTeam1()->getName(),"team2"=>$match->getTeam2()->getName(),"description"=>$match->getDescription());
 $spielereignisse_smarty=array();
 foreach ($spielereignisse as $spielereignis) {
-    $spielereignis_array=array("id"=>$spielereignis->getId(),"spieler"=>$spielereignis->getSpieler()->getName(),
-                               "minute"=>$spielereignis->getMinute(),"nachspielzeit"=>$spielereignis->getNachspielzeit(),"typ"=>$spielereignis->getTyp());
-    array_push($spielereignisse_smarty,$spielereignis_array);
+    array_push($spielereignisse_smarty,$spielereignis->getAsArray());
 }
 $smarty=new Smarty();
 $smarty->assign("match",$match_smarty);

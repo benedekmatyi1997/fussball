@@ -7,8 +7,7 @@ $alle_teams_smarty=array();
 
 foreach($alle_teams as $team)
 {
-    $team_array=array("id"=>$team->getId(), "name"=>$team->getName());
-    array_push($alle_teams_smarty,$team_array);
+    array_push($alle_teams_smarty,$team->getAsArray());
 }
 $smarty=new Smarty();
 $smarty->assign("alle_teams",$alle_teams_smarty);

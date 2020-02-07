@@ -1,10 +1,13 @@
 <?php
 require_once("class.db.php");
 require_once("class.AbstractBaseClass.php");
+require_once("class.liga.php");
+
 
 class Saison extends AbstractBaseClass
 {
     protected static $columns=array("id","liga","aufstieg","von","bis");
+    protected static $all_elements=array();
     private $id;
     private $liga;
     private $aufstieg;
@@ -27,7 +30,7 @@ class Saison extends AbstractBaseClass
                 "WHERE sa.id=:id");
         $stmt->bindValue(":id",$id);
         $error="";
-        if($stmt->execute())
+        if(DB::execute($stmt))
         {   
             $joinarray=static::getJoinArray($stmt,array_merge(Saison::getColumns("saison"),Liga::getColumns("liga")));
             $result=$stmt->fetch(PDO::FETCH_BOUND);
@@ -44,10 +47,6 @@ class Saison extends AbstractBaseClass
             {
                 $error.="Leeres Resultat";
             }
-        }
-        else
-        {
-            $error.=$stmt->errorInfo()[2];
         }
         if(strlen($error))
         {
@@ -76,10 +75,7 @@ class Saison extends AbstractBaseClass
         $stmt->bindValue(":von",$this->von);
         $stmt->bindValue(":bis",$this->bis);
                 
-        if(!$stmt->execute())
-        {
-            throw new Exception($stmt->errorInfo()[2]);
-        }
+        DB::execute($stmt);
     }
     public function setValues($id,$liga,$aufstieg,$von,$bis)
     {
@@ -139,7 +135,7 @@ class Saison extends AbstractBaseClass
                                      . "LEFT JOIN region re ON re.id=li.region");
             $error="";
             static::$all_elements=array();
-            if($stmt->execute())
+            if(DB::execute($stmt))
             {                
                 $joinarray=static::getJoinArray($stmt, array_merge(Saison::getColumns("saison"),Liga::getColumns("liga"),Region::getColumns("region")));
                 

@@ -5,6 +5,7 @@ require_once("class.AbstractBaseClass.php");
 class Region extends AbstractBaseClass
 {
     protected static $columns=array("id","name","code","uebergeordnet","typ");
+    protected static $all_elements=array();
     private $id;
     private $name;
     private $code;
@@ -25,7 +26,7 @@ class Region extends AbstractBaseClass
         $stmt=static::$db->prepare("SELECT * FROM region WHERE id=:id");
         $stmt->bindValue(":id",$id);
         $error="";
-        if($stmt->execute())
+        if(DB::execute($stmt))
         {
             $result=$stmt->fetch();
             if($result)
@@ -33,17 +34,13 @@ class Region extends AbstractBaseClass
                 $this->id=$id;
                 $this->name=$result["name"];
                 $this->code=$result["code"];
-                $this->code=$result["uebergeordnet"];
-                $this->code=$result["typ"];
+                $this->uebergeordnet=$result["uebergeordnet"];
+                $this->typ=$result["typ"];
             }
             else
             {
                 $error.="Leeres Resultat";
             }
-        }
-        else
-        {
-            $error.=$stmt->errorInfo()[2];
         }
         if(strlen($error))
         {
@@ -72,18 +69,15 @@ class Region extends AbstractBaseClass
         $stmt->bindValue(":code",$this->uebergeordnet);
         $stmt->bindValue(":code",$this->typ);
                 
-        if(!$stmt->execute())
-        {
-            throw new Exception($stmt->errorInfo()[2]);
-        }
+        DB::execute($stmt);
     }
     public function setValues($id,$name,$code,$uebergeordnet,$typ)
     {
         $this->setId($id);
         $this->setName($name);
         $this->setCode($code);
-        $this->setCode($uebergeordnet);
-        $this->setCode($typ);
+        $this->setUebergeordnet($uebergeordnet);
+        $this->setTyp($typ);
     }
     public function getId()
     {
@@ -133,7 +127,7 @@ public function setTyp($typ)
             $stmt=static::$db->prepare("SELECT * FROM region");
             $error="";
             static::$all_elements=array();
-            if($stmt->execute())
+            if(DB::execute($stmt))
             {                
                 $joinarray=static::getJoinArray($stmt,Region::getColumns("region"));
                 

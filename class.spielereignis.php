@@ -7,6 +7,7 @@ require_once("class.AbstractBaseClass.php");
 class Spielereignis extends AbstractBaseClass
 {
     protected static $columns=array("id","spieler","minute","nachspielzeit","typ","match");
+    protected static $all_elements=array();
     private $id;
     private $spieler;
     private $minute;
@@ -30,7 +31,7 @@ class Spielereignis extends AbstractBaseClass
         $stmt=static::$db->prepare("SELECT * FROM spielereignis WHERE id=:id");
         $stmt->bindValue(":id",$id);
         $error="";
-        if($stmt->execute())
+        if(DB::execute($stmt))
         {
             $joinarray=static::getJoinArray($stmt,Spielereignis::getColumns());
             
@@ -43,13 +44,10 @@ class Spielereignis extends AbstractBaseClass
                 $this->setSpieler($joinarray["spieler"]);
                 $debug && print($joinarray["match"].PHP_EOL);
                 $this->setMatch($joinarray["match"]);
-                $this->von=$joinarray["typ"];
-                $this->bis=$joinarray["minute"];
+                $this->typ=$joinarray["typ"];
+                $this->minute=$joinarray["minute"];
+                $this->nachspielzeit=$joinarray["nachspielzeit"];
 			}
-		}
-		else
-		{
-			$error.=$stmt->errorInfo()[2];
 		}
 		if(strlen($error))
 		{
@@ -80,10 +78,7 @@ class Spielereignis extends AbstractBaseClass
         $stmt->bindValue(":nachspielzeit",$this->nachspielzeit);
         $stmt->bindValue(":typ",$this->typ);
 
-        if(!$stmt->execute())
-        {
-            throw new Exception($stmt->errorInfo()[2]);
-        }
+        DB::execute($stmt);
     }
     public function getId()
     {
@@ -181,7 +176,7 @@ class Spielereignis extends AbstractBaseClass
                                      . "LEFT JOIN spieler sp ON sp.id=se.spielerid");
             $error="";
             static::$all_elements=array();
-            if($stmt->execute())
+            if(DB::execute($stmt))
             {
                 $joinarray=static::getJoinArray($stmt,array_merge(Match::getColumns("match"),
                                                                   Spieler::getColumns("spieler"),
@@ -214,7 +209,7 @@ class Spielereignis extends AbstractBaseClass
                                    "WHERE se.matchid=:matchid");
         
         $stmt->bindValue(":matchid",$matchid);
-        if($stmt->execute())
+        if(DB::execute($stmt))
         {
             $spielereignisse=array();
             
@@ -229,10 +224,6 @@ class Spielereignis extends AbstractBaseClass
                 array_push($spielereignisse,$spielereignis_temp);
             }
             return $spielereignisse;
-        }
-        else 
-        {
-            throw new Exception($stmt->errorInfo()[2]);
         }
     }
 }

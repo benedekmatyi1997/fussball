@@ -1,6 +1,7 @@
 <?php
 require_once("class.db.php");
 require_once("class.AbstractBaseClass.php");
+require_once("class.region.php");
 class Team extends AbstractBaseClass
 {
     protected static $columns=array("id","name","region");
@@ -13,6 +14,7 @@ class Team extends AbstractBaseClass
     {
         
         $this->id=$id;
+        $this->setRegion(0);
         if($id!=0)
         {
             $this->load($id);
@@ -31,7 +33,7 @@ class Team extends AbstractBaseClass
             {
                 $this->id=$id;                
                 $this->name=$result["name"];
-                $this->name=$result["region"];
+                $this->setRegion($result["region"]);
             }
             else
             {
@@ -61,7 +63,7 @@ class Team extends AbstractBaseClass
         }
         $stmt->bindValue(":id",$this->id);
         $stmt->bindValue(":name",$this->name);
-        $stmt->bindValue(":name",$this->region);
+        $stmt->bindValue(":region",$this->region->getId());
         DB::execute($stmt);       
     }
     public function getId()
@@ -86,7 +88,18 @@ class Team extends AbstractBaseClass
     }
     public function setRegion($region)
     {
-        $this->region=$region;
+        if($region instanceof Region)
+        {
+            $this->region=$region;        
+        }
+        else if(is_numeric($region) && $region)
+        {
+            $this->region->load($region);
+        }
+        else
+        {
+            $this->region=new Region();
+        }
     }
     public function setValues($id,$name,$region)
     {

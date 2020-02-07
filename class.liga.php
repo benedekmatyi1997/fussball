@@ -5,6 +5,7 @@ require_once("class.AbstractBaseClass.php");
 class Liga extends AbstractBaseClass
 {
     protected static $columns=array("id","name","region","aufstieg");
+    protected static $all_elements=array();
     private $id;
     private $name;
     private $region;
@@ -43,10 +44,6 @@ class Liga extends AbstractBaseClass
                 $error.="Leeres Resultat";
             }
         }
-        else
-        {
-            $error.=$stmt->errorInfo()[2];
-        }
         if(strlen($error))
         {
             throw new Exception($error);
@@ -73,10 +70,7 @@ class Liga extends AbstractBaseClass
         $stmt->bindValue(":region",$this->region);
         $stmt->bindValue(":aufstieg",$this->aufstieg);
                 
-        if(!$stmt->execute())
-        {
-            throw new Exception($stmt->errorInfo()[2]);
-        }
+        DB::execute($stmt);
     }
     public function setValues($id,$name,$region,$aufstieg)
     {
@@ -132,7 +126,7 @@ class Liga extends AbstractBaseClass
             $stmt=static::$db->prepare("SELECT la.*,li.* FROM liga li LEFT JOIN region la ON la.id=li.region");
             $error="";
             static::$all_elements=array();
-            if($stmt->execute())
+            if(DB::execute($stmt))
             {                
                 $joinarray=static::getJoinArray($stmt, array_merge(Liga::getColumns("liga"),Region::getColumns("region")));
                 
