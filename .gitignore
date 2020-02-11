@@ -2,6 +2,8 @@
 /db_config.inc.php
 /test*
 /nbproject/*
+/UML/Fussball.dia~
+/fill_db/api_keys.inc.php
 *.dia~
 SELECT_foreach.txt
 _teststuff.php
