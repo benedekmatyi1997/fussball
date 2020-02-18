@@ -1,5 +1,6 @@
 <?php
 require_once("class.db.php");
+require_once("class.saison.php");
 require_once("class.stadion.php");
 require_once("class.team.php");
 require_once("class.AbstractBaseClass.php");
@@ -8,7 +9,7 @@ class Match extends AbstractBaseClass
 {
     protected static $columns=array("id","team1","team2","saison","zeitpunkt","halbzeit1","halbzeit2","stadion","zuschauzahl","endstand1","endstand2");
     protected static $all_elements=array();
-    
+    protected static $tablename="spiel";
     private $id;
     private $team1;
     private $team2;
@@ -17,7 +18,7 @@ class Match extends AbstractBaseClass
     private $halbzeit1;
     private $halbzeit2;
     private $stadion;
-    private $zuschauzahl;   //TODO: ändern auf zuschauERzahl
+    private $zuschauzahl; 
     private $endstand1;
     private $endstand2;
     

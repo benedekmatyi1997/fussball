@@ -7,5 +7,5 @@
 *.dia~
 SELECT_foreach.txt
 _teststuff.php
-smarty.inc.php
+/smarty.inc.php
 utilities.php

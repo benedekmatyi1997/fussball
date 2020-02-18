@@ -1,11 +1,13 @@
 <?php
 require_once("class.db.php");
 require_once("class.AbstractBaseClass.php");
+require_once("class.region.php");
 
 class Liga extends AbstractBaseClass
 {
     protected static $columns=array("id","name","region","aufstieg");
     protected static $all_elements=array();
+    protected static $tablename="liga";
     private $id;
     private $name;
     private $region;

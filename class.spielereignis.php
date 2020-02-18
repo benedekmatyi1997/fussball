@@ -8,6 +8,7 @@ class Spielereignis extends AbstractBaseClass
 {
     protected static $columns=array("id","spieler","minute","nachspielzeit","typ","match");
     protected static $all_elements=array();
+    protected static $tablename="spielereignis";
     private $id;
     private $spieler;
     private $minute;

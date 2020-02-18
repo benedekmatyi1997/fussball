@@ -6,6 +6,7 @@ class Team extends AbstractBaseClass
 {
     protected static $columns=array("id","name","region");
     protected static $all_elements=array();
+    protected static $tablename="team";
     private $id;
     private $name;
     private $region;

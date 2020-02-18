@@ -8,6 +8,7 @@ class Team2Stadion extends AbstractBaseClass
 {
     protected static $columns=array("id","team","stadion","von","bis");
     protected static $all_elements=array();
+    protected static $tablename="team2stadion";
     private $id;
     private $team;
     private $stadion;
@@ -111,7 +112,7 @@ class Team2Stadion extends AbstractBaseClass
         }
         else if(is_numeric($team) && $team)
         {
-            $this->team1->load($team);
+            $this->team->load($team);
         }
         else
         {

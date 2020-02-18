@@ -8,6 +8,7 @@ class Saison extends AbstractBaseClass
 {
     protected static $columns=array("id","liga","aufstieg","von","bis");
     protected static $all_elements=array();
+    protected static $tablename="saison";
     private $id;
     private $liga;
     private $aufstieg;

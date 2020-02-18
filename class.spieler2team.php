@@ -8,6 +8,7 @@ class Spieler2Team extends AbstractBaseClass
 {
     protected static $columns=array("id","spieler","team","von","bis");
     protected static $all_elements=array();
+    protected static $tablename="spieler2team";
     private $id;
     private $spieler;
     private $team;

@@ -5,6 +5,7 @@ class Stadion extends AbstractBaseClass
 {
     protected static $columns=array("id","name","ort","kapazitaet");
     protected static $all_elements=array();
+    protected static $tablename="stadion";
     private $id;
     private $name;
     private $ort;
